@@ -3,6 +3,11 @@ library("org.Hs.eg.db")
 library("hgu133plus2.db")
 library(gridExtra)
 library(jetset)
+library(RColorBrewer)
+
+colrs <- brewer.pal.info[brewer.pal.info$colorblind == TRUE, ]
+col_vec = unlist(mapply(brewer.pal, colrs$maxcolors, rownames(colrs)))
+
 
 icellnetdb <- '/cluster/projects/mcgahalab/ref/icellnet/ICELLNETdb.tsv'
 db <- read.table(icellnetdb, sep="\t", check.names = F,header=T,
@@ -104,6 +109,8 @@ data.scaled=gene.scaling(data = data, n=1, db = db)
 
 # data selection
 ids <- gsub("_(REP[0-9]).*$", "", colnames(data.scaled)) %>% table
+rmids_regex <- "HD150|HD96"
+ids <- ids[grep(rmids_regex, names(ids), ignore.case = T, invert=T)]
 sample_ids <- names(ids[ids > 1])
 sample_ids <- lapply(sample_ids, function(i) grep(i, colnames(data.scaled), value=T)) %>%
   setNames(., sample_ids)
@@ -127,11 +134,11 @@ score_lr <- lapply(c(sample_ids, ctrl_ids), function(id_i){
   lr=score.computation[[2]]
   return(list("score"=score, "lr"=lr))
 })
-saveRDS(score_lr, file=file.path(lranaldir, "scores_lr.filter.rds"))
+saveRDS(score_lr, file=file.path(lranaldir, "scores_lr.filter.hdrm.rds"))
 
 
 #### Visualization ####
-score_lr <- readRDS(file=file.path(lranaldir, "scores_lr.filter.rds"))
+score_lr <- readRDS(file=file.path(lranaldir, "scores_lr.filter.hdrm.rds"))
 
 Scores <- lapply(score_lr, function(i)i$score) %>%
   do.call(cbind, .) %>%
@@ -158,8 +165,8 @@ network_plots <- lapply(seq_along(colnames(Scores)), function(scores_i) {
 }) %>%
   setNames(., colnames(Scores))
 
-pdf(file.path(lranaldir, "intercellular_comm.pdf"), width = 25, height = 25)
-cowplot::plot_grid(plotlist = network_plots, ncol = ncol(Scores)/4)
+pdf(file.path(lranaldir, "intercellular_comm.pdf"), width = 20, height = 20)
+cowplot::plot_grid(plotlist = network_plots, ncol = ceiling(sqrt(ncol(Scores))))
 dev.off()
 file.copy(from = file.path(lranaldir, "intercellular_comm.pdf"), to="~/xfer", overwrite = T)
 
@@ -167,7 +174,8 @@ file.copy(from = file.path(lranaldir, "intercellular_comm.pdf"), to="~/xfer", ov
 # individual communication scores
 family.col = c( "CC"= "#AECBE3", "COL"= "#66ABDF", "CX3C"= "#1D1D18"  ,
             "EGFR family"="#156399", "Semaphorin" ="#676766", "TNF" = "#12A039",  "NA"="#908F90")
-
+subfamilies <- unique(db.name.couple[,2])
+family.col = setNames(sample(col_vec, length(subfamilies)), subfamilies)
 
 balloon_plots <- lapply(names(Lrs), function(lr_id) {
   lr_ind <- Lrs[[lr_id]] %>%
