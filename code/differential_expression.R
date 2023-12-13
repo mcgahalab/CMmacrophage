@@ -28,7 +28,7 @@ pdir <- '/cluster/projects/mcgahalab/data/mcgahalab/jalal_receptor_ligand/result
 gprofiler_dir <- '/cluster/projects/mcgahalab/ref/gprofiler'
 gprofiler_f <- file.path(gprofiler_dir, 'gprofiler_full_hsapiens.ENSG.gmt')
 
-barcodes_f="~/mcgahalab/ref/scrna/barcodes.tsv"
+barcodes_f="~/git/mini_projects/ref/barcodes.tsv"
 
 #### Functions ####
 # code cloned from https://github.com/quevedor2/mini_projects
