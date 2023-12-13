@@ -46,43 +46,6 @@ transform = db.hgu133plus2(db,PC.affy.probes) # creation of a new db2 database w
 PC.data=gene.scaling(data = PC.data, n=18, db = transform) 
 
 
-#### Load in sample data ####
-dir2='/cluster/home/quever/git/ICELLNET/data_CAF'
-# Central cell data file (processed gene expression matrix)
-demo_data=as.data.frame(read.table(file.path(dir2, "data_CAF.txt"), sep="\t", header = T))
-rownames(demo_data)=demo_data$SYMBOL
-demo_data=dplyr::select(demo_data, -SYMBOL)
-CC.data= gene.scaling(data = demo_data, n=4, db = db) 
-
-#Target central cell file (description of the different samples)
-CC.target = as.data.frame(read.table(file.path(dir2, "target_CAF.txt"),sep = "\t",header=T))
-head(CC.target)
-
-#Rescale the data
-CC.selection.S1 = CC.target[which(CC.target$Type=="T"&CC.target$subset=="S1"&CC.target$Cancer.subtype=="TN"),"Sample.Name"] # CAF-S1 in TNBC samples
-CC.selection.S2 = CC.target[which(CC.target$Type=="T"&CC.target$subset=="S4"&CC.target$Cancer.subtype=="TN"),"Sample.Name"] # CAF-S4 in TNBC samples
-
-CC.data.selection.S1 = CC.data[,which(colnames(CC.data)%in%CC.selection.S1)]
-CC.data.selection.S2 = CC.data[,which(colnames(CC.data)%in%CC.selection.S2)]
-
-#--- Computer communication scores ----
-score.computation.1= icellnet.score(direction="out", PC.data=PC.data, CC.data= CC.data.selection.S1,  
-                                    PC.target = PC.target, PC=my.selection, CC.type = "RNAseq", 
-                                    PC.type = "Microarray",  db = db)
-score1=as.data.frame(score.computation.1[[1]])
-lr1=score.computation.1[[2]]
-
-
-score.computation.2= icellnet.score(direction="out", PC.data=PC.data, CC.data= CC.data.selection.S2,  
-                                    PC.target = PC.target,PC=my.selection, CC.type = "RNAseq", 
-                                    PC.type = "Microarray",  db = db)
-score2=as.data.frame(score.computation.2[[1]])
-lr2=score.computation.2[[2]]
-
-Scores=cbind(score1,score2)
-colnames(Scores)=c("CAF-S1","CAF-S4")
-Scores
-
 #### Load Jalal data ####
 dir <- '/cluster/projects/mcgahalab/data/mcgahalab/jalal_receptor_ligand/results/counts/'
 lranaldir <- file.path(dir, "..", "manual", "ligand_receptor")
